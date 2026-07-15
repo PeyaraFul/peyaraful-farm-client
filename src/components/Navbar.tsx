@@ -19,6 +19,7 @@ const guestLinks = [
 
 const userLinks = [
   { href: "/dashboard", label: "Dashboard" },
+  { href: "/dashboard/my-orders", label: "My Orders" },
 ];
 
 export default function Navbar() {
