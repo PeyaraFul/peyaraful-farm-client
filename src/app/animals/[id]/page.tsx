@@ -5,7 +5,7 @@ import { useParams } from "next/navigation";
 import Link from "next/link";
 import toast from "react-hot-toast";
 import api from "@/lib/api";
-import { useSession } from "@/lib/auth-client";
+import { authClient } from "@/lib/auth-client";
 import AnimalCard from "@/components/AnimalCard";
 
 interface Animal {
@@ -35,7 +35,7 @@ interface Review {
 
 export default function AnimalDetailsPage() {
   const { id } = useParams();
-  const { data: session } = useSession();
+  const { data: session } = authClient.useSession();
   const user = session?.user;
 
   const [animal, setAnimal] = useState<Animal | null>(null);

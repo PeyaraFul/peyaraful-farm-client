@@ -36,6 +36,7 @@ export default function RegisterPage() {
       name: name,
       email: email,
       password: password,
+      role: 'user'
     });
 
     
@@ -62,7 +63,7 @@ export default function RegisterPage() {
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-green-800">Peyaraful Farm</h1>
-          <p className="text-gray-600 mt-2">reate your account</p>
+          <p className="text-gray-600 mt-2">Create your account</p>
         </div>
 
         <div className="bg-white rounded-2xl shadow-lg p-8">
