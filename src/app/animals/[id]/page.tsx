@@ -68,7 +68,7 @@ export default function AnimalDetailsPage() {
     }
     setBuying(true);
     try {
-      await api.post("/api/orders", { animalId: id });
+      await api.post("/api/orders", { animalId: id, buyerId: user.id });
       toast.success("Order placed!");
       setAnimal((prev) => (prev ? { ...prev, status: "sold" } : prev));
     } catch (err: unknown) {
