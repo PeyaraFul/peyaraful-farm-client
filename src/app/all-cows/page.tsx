@@ -19,6 +19,7 @@ export default function AllCowsPage() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [type, setType] = useState("");
+  const [sort, setSort] = useState("newest");
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
 
@@ -28,7 +29,7 @@ export default function AllCowsPage() {
     async function load() {
       setLoading(true);
       try {
-        const params: Record<string, string | number> = { page, limit: 8 };
+        const params: Record<string, string | number> = { page, limit: 8, sort };
         if (search) params.search = search;
         if (type) params.type = type;
 
@@ -46,7 +47,7 @@ export default function AllCowsPage() {
 
     load();
     return () => { cancelled = true; };
-  }, [search, type, page]);
+  }, [search, type, sort, page]);
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
@@ -74,6 +75,18 @@ export default function AllCowsPage() {
           <option value="">All Types</option>
           <option value="cow">Cows</option>
           <option value="buffalo">Buffaloes</option>
+        </select>
+        <select
+          value={sort}
+          onChange={(e) => {
+            setSort(e.target.value);
+            setPage(1);
+          }}
+          className="px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-emerald-bright focus:border-transparent outline-none"
+        >
+          <option value="newest">Newest</option>
+          <option value="price_asc">Price: Low to High</option>
+          <option value="price_desc">Price: High to Low</option>
         </select>
       </div>
 
