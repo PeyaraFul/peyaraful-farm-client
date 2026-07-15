@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import toast from "react-hot-toast";
 import api from "@/lib/api";
 import { useSession } from "@/lib/auth-client";
 
@@ -30,6 +31,11 @@ export default function MyOrdersPage() {
 
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
+  const [reviewedMap, setReviewedMap] = useState<Record<string, boolean>>({});
+  const [reviewingOrderId, setReviewingOrderId] = useState<string | null>(null);
+  const [reviewRating, setReviewRating] = useState(5);
+  const [reviewComment, setReviewComment] = useState("");
+  const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
     if (!user) return;
@@ -41,7 +47,27 @@ export default function MyOrdersPage() {
         const res = await api.get("/api/orders", {
           params: { buyerId },
         });
-        if (!cancelled) setOrders(res.data);
+        if (!cancelled) {
+          setOrders(res.data);
+          const paidOrders = res.data.filter((o: Order) => o.status === "paid");
+          const checks = await Promise.all(
+            paidOrders.map(async (o: Order) => {
+              try {
+                const r = await api.get("/api/reviews/check", {
+                  params: { orderId: o._id },
+                });
+                return { orderId: o._id, reviewed: r.data.reviewed };
+              } catch {
+                return { orderId: o._id, reviewed: false };
+              }
+            })
+          );
+          if (!cancelled) {
+            const map: Record<string, boolean> = {};
+            checks.forEach((c) => { map[c.orderId] = c.reviewed; });
+            setReviewedMap(map);
+          }
+        }
       } catch {
         if (!cancelled) setOrders([]);
       } finally {
@@ -52,6 +78,30 @@ export default function MyOrdersPage() {
     load();
     return () => { cancelled = true; };
   }, [user]);
+
+  const handleSubmitReview = async (orderId: string, animalId: string) => {
+    if (!user) return;
+    setSubmitting(true);
+    try {
+      await api.post("/api/reviews", {
+        userId: user.id,
+        animalId,
+        orderId,
+        rating: reviewRating,
+        comment: reviewComment,
+      });
+      toast.success("Review submitted!");
+      setReviewedMap((prev) => ({ ...prev, [orderId]: true }));
+      setReviewingOrderId(null);
+      setReviewRating(5);
+      setReviewComment("");
+    } catch (err: unknown) {
+      const error = err as { response?: { data?: { message?: string } } };
+      toast.error(error.response?.data?.message || "Failed to submit review");
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   if (!user) {
     return (
@@ -103,6 +153,7 @@ export default function MyOrdersPage() {
                 <th className="py-3 px-4 text-sm font-semibold text-gray-600">Price</th>
                 <th className="py-3 px-4 text-sm font-semibold text-gray-600">Status</th>
                 <th className="py-3 px-4 text-sm font-semibold text-gray-600">Date</th>
+                <th className="py-3 px-4 text-sm font-semibold text-gray-600">Review</th>
               </tr>
             </thead>
             <tbody>
@@ -146,6 +197,63 @@ export default function MyOrdersPage() {
                   </td>
                   <td className="py-3 px-4 text-sm text-gray-500">
                     {new Date(order.createdAt).toLocaleDateString("en-BD")}
+                  </td>
+                  <td className="py-3 px-4">
+                    {order.status === "paid" && (
+                      reviewedMap[order._id] ? (
+                        <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-emerald-deep/10 text-emerald-deep">
+                          Reviewed
+                        </span>
+                      ) : reviewingOrderId === order._id ? (
+                        <div className="space-y-2 min-w-[200px]">
+                          <div className="flex gap-1">
+                            {[1, 2, 3, 4, 5].map((star) => (
+                              <button
+                                key={star}
+                                type="button"
+                                onClick={() => setReviewRating(star)}
+                                className="text-lg cursor-pointer"
+                              >
+                                {star <= reviewRating ? "★" : "☆"}
+                              </button>
+                            ))}
+                          </div>
+                          <textarea
+                            value={reviewComment}
+                            onChange={(e) => setReviewComment(e.target.value)}
+                            placeholder="Write your review..."
+                            className="w-full text-xs border border-gray-200 rounded-lg p-2 resize-none"
+                            rows={2}
+                          />
+                          <div className="flex gap-2">
+                            <button
+                              onClick={() => handleSubmitReview(order._id, order.animalId)}
+                              disabled={submitting}
+                              className="text-xs px-3 py-1 bg-emerald-deep text-white rounded-lg hover:bg-emerald-bright transition disabled:opacity-50 cursor-pointer"
+                            >
+                              {submitting ? "Submitting..." : "Submit"}
+                            </button>
+                            <button
+                              onClick={() => {
+                                setReviewingOrderId(null);
+                                setReviewRating(5);
+                                setReviewComment("");
+                              }}
+                              className="text-xs px-3 py-1 text-gray-500 hover:text-gray-700 cursor-pointer"
+                            >
+                              Cancel
+                            </button>
+                          </div>
+                        </div>
+                      ) : (
+                        <button
+                          onClick={() => setReviewingOrderId(order._id)}
+                          className="text-xs font-semibold px-3 py-1 rounded-full border border-gold text-gold hover:bg-gold hover:text-white transition cursor-pointer"
+                        >
+                          Write Review
+                        </button>
+                      )
+                    )}
                   </td>
                 </tr>
               ))}

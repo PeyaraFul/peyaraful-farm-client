@@ -23,6 +23,16 @@ interface Animal {
   sellerId: string;
 }
 
+interface Review {
+  _id: string;
+  userId: string;
+  animalId: string;
+  orderId: string;
+  rating: number;
+  comment: string;
+  createdAt: string;
+}
+
 export default function AnimalDetailsPage() {
   const { id } = useParams();
   const { data: session } = useSession();
@@ -30,6 +40,9 @@ export default function AnimalDetailsPage() {
 
   const [animal, setAnimal] = useState<Animal | null>(null);
   const [related, setRelated] = useState<Animal[]>([]);
+  const [reviews, setReviews] = useState<Review[]>([]);
+  const [averageRating, setAverageRating] = useState(0);
+  const [reviewCount, setReviewCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [buying, setBuying] = useState(false);
 
@@ -49,6 +62,13 @@ export default function AnimalDetailsPage() {
           setRelated(
             relRes.data.animals.filter((a: Animal) => a._id !== id).slice(0, 4)
           );
+        }
+
+        const revRes = await api.get(`/api/reviews/animal/${id}`);
+        if (!cancelled) {
+          setReviews(revRes.data.reviews);
+          setAverageRating(revRes.data.averageRating);
+          setReviewCount(revRes.data.total);
         }
       } catch {
         if (!cancelled) setAnimal(null);
@@ -130,6 +150,20 @@ export default function AnimalDetailsPage() {
           <p className="text-gray-500 mt-1">
             {animal.breed} &middot; {animal.type === "cow" ? "Cow" : "Buffalo"}
           </p>
+          {reviewCount > 0 && (
+            <div className="flex items-center gap-2 mt-2">
+              <div className="flex text-gold text-lg">
+                {[1, 2, 3, 4, 5].map((star) => (
+                  <span key={star}>
+                    {star <= Math.round(averageRating) ? "★" : "☆"}
+                  </span>
+                ))}
+              </div>
+              <span className="text-sm text-gray-500">
+                {averageRating.toFixed(1)} ({reviewCount} {reviewCount === 1 ? "review" : "reviews"})
+              </span>
+            </div>
+          )}
 
           <div className="mt-6 grid grid-cols-2 gap-4 text-sm">
             <div>
@@ -187,6 +221,55 @@ export default function AnimalDetailsPage() {
           </div>
         </div>
       )}
+
+      {/* Reviews Section */}
+      <div className="mt-16">
+        <h2 className="text-2xl font-bold text-emerald-deep mb-6">Customer Reviews</h2>
+
+        {reviewCount > 0 && (
+          <div className="bg-sand rounded-xl p-6 mb-6 flex items-center gap-4">
+            <div className="text-center">
+              <p className="text-4xl font-bold text-emerald-deep">{averageRating.toFixed(1)}</p>
+              <div className="flex text-gold text-lg mt-1">
+                {[1, 2, 3, 4, 5].map((star) => (
+                  <span key={star}>
+                    {star <= Math.round(averageRating) ? "★" : "☆"}
+                  </span>
+                ))}
+              </div>
+              <p className="text-sm text-gray-500 mt-1">
+                {reviewCount} {reviewCount === 1 ? "review" : "reviews"}
+              </p>
+            </div>
+          </div>
+        )}
+
+        {reviews.length === 0 ? (
+          <p className="text-gray-500">No reviews yet. Be the first to review this animal!</p>
+        ) : (
+          <div className="space-y-4">
+            {reviews.map((review) => (
+              <div key={review._id} className="bg-white border border-gray-100 rounded-xl p-5 shadow-sm">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex text-gold text-sm">
+                    {[1, 2, 3, 4, 5].map((star) => (
+                      <span key={star}>
+                        {star <= review.rating ? "★" : "☆"}
+                      </span>
+                    ))}
+                  </div>
+                  <span className="text-xs text-gray-400">
+                    {new Date(review.createdAt).toLocaleDateString("en-BD")}
+                  </span>
+                </div>
+                {review.comment && (
+                  <p className="text-gray-600 text-sm leading-relaxed">{review.comment}</p>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 }

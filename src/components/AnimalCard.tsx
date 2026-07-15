@@ -10,7 +10,15 @@ interface Animal {
   status: "available" | "sold";
 }
 
-export default function AnimalCard({ animal }: { animal: Animal }) {
+export default function AnimalCard({
+  animal,
+  averageRating,
+  reviewCount,
+}: {
+  animal: Animal;
+  averageRating?: number;
+  reviewCount?: number;
+}) {
   return (
     <div className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-lg transition">
       <div className="relative h-48 bg-gray-100">
@@ -32,6 +40,20 @@ export default function AnimalCard({ animal }: { animal: Animal }) {
         <p className="text-sm text-gray-500 mt-1">
           {animal.breed} &middot; {animal.type === "cow" ? "Cow" : "Buffalo"}
         </p>
+        {averageRating !== undefined && averageRating > 0 && (
+          <div className="flex items-center gap-1 mt-2">
+            <div className="flex text-gold text-sm">
+              {[1, 2, 3, 4, 5].map((star) => (
+                <span key={star}>
+                  {star <= Math.round(averageRating) ? "★" : "☆"}
+                </span>
+              ))}
+            </div>
+            <span className="text-xs text-gray-500">
+              {averageRating.toFixed(1)}{reviewCount !== undefined ? ` (${reviewCount})` : ""}
+            </span>
+          </div>
+        )}
         <p className="text-lg font-semibold text-gold mt-2">
           ৳{animal.price.toLocaleString()}
         </p>

@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
-import api from "@/lib/api";
+import { authClient } from "@/lib/auth-client";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -13,41 +13,51 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
+  e.preventDefault();
+  setLoading(true);
 
-    try {
-      const res = await api.post("/api/auth/login", { email, password });
-      localStorage.setItem("token", res.data.token);
-      toast.success("Login successful!");
-      router.push("/");
-    } catch (err: unknown) {
-      const error = err as { response?: { data?: { message?: string } } };
-      toast.error(error.response?.data?.message || "Login failed");
-    } finally {
-      setLoading(false);
+  try {
+    const { error } = await authClient.signIn.email({
+      email,
+      password,
+      rememberMe: true,
+    });
+
+    if (error) {
+      toast.error(error.message || "Invalid email or password.");
+      return;
     }
-  };
+
+    toast.success("Login successful!");
+    router.push("/");
+  } catch (err) {
+    console.error("Login Error:", err);
+
+    toast.error(
+      err instanceof Error
+        ? err.message
+        : "Something went wrong. Please try again."
+    );
+  } finally {
+    setLoading(false);
+  }
+};
 
   const handleDemoLogin = async () => {
     setEmail("admin@peyaraful.com");
     setPassword("admin123");
     setLoading(true);
 
-    try {
-      const res = await api.post("/api/auth/login", {
-        email: "admin@peyaraful.com",
-        password: "admin123",
-      });
-      localStorage.setItem("token", res.data.token);
-      toast.success("Demo login successful!");
-      router.push("/");
-    } catch (err: unknown) {
-      const error = err as { response?: { data?: { message?: string } } };
-      toast.error(error.response?.data?.message || "Demo login failed");
-    } finally {
-      setLoading(false);
+    const { error } = await authClient.signIn.email({
+      email: email,
+      password: password,
+      rememberMe: true,
+    });
+    if (error) {
+      toast.error(error.message || "login failed");
     }
+
+    setLoading(false);
   };
 
   return (
@@ -61,7 +71,10 @@ export default function LoginPage() {
         <div className="bg-white rounded-2xl shadow-lg p-8">
           <form onSubmit={handleSubmit} className="space-y-5">
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+              <label
+                htmlFor="email"
+                className="block text-sm font-medium text-gray-700 mb-1"
+              >
                 Email
               </label>
               <input
@@ -76,7 +89,10 @@ export default function LoginPage() {
             </div>
 
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
+              <label
+                htmlFor="password"
+                className="block text-sm font-medium text-gray-700 mb-1"
+              >
                 Password
               </label>
               <input
@@ -115,7 +131,10 @@ export default function LoginPage() {
 
           <p className="text-center mt-6 text-sm text-gray-600">
             Don&apos;t have an account?{" "}
-            <Link href="/auth/register" className="text-green-700 hover:underline font-medium">
+            <Link
+              href="/auth/register"
+              className="text-green-700 hover:underline font-medium"
+            >
               Register
             </Link>
           </p>
