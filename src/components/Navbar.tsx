@@ -10,6 +10,7 @@ const publicLinks = [
   { href: "/", label: "Home" },
   { href: "/all-cows", label: "All Cows" },
   { href: "/about", label: "About" },
+  { href: "/contact", label: "Contact" },
 ];
 
 const guestLinks = [
@@ -20,6 +21,11 @@ const guestLinks = [
 const userLinks = [
   { href: "/dashboard", label: "Dashboard" },
   { href: "/dashboard/my-orders", label: "My Orders" },
+];
+
+const adminLinks = [
+  { href: "/dashboard/admin/add-item", label: "Add Animal" },
+  { href: "/dashboard/admin/manage-items", label: "Manage Animals" },
 ];
 
 export default function Navbar() {
@@ -33,8 +39,12 @@ export default function Navbar() {
 const { data: session } = authClient.useSession();
   const user = session?.user;
 
+  const isAdmin = (user as Record<string, unknown>)?.role === "admin";
+
   const links = user
-    ? [...publicLinks, ...userLinks]
+    ? isAdmin
+      ? [...publicLinks, ...adminLinks, ...userLinks]
+      : [...publicLinks, ...userLinks]
     : [...publicLinks, ...guestLinks];
     // console.log('kdk,',user);
 
