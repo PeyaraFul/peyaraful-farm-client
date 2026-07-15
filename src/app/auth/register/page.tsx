@@ -2,14 +2,10 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
-import api from "@/lib/api";
 import { authClient } from "@/lib/auth-client";
 
-
 export default function RegisterPage() {
-  const router = useRouter();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -20,17 +16,18 @@ export default function RegisterPage() {
     setLoading(true);
 
     try {
-     const { data, error } = await authClient.signUp.email({
-    name,
-    email,
-    password,
-});
-console.log('dataa', data);
+      const { error } = await authClient.signUp.email({
+        name,
+        email,
+        password,
+      });
+      if (error) {
+        toast.error(error.message || "Registration failed");
+        return;
+      }
       toast.success("Account created! Please login.");
-      // router.push("/auth/login"); 
-    } catch (err: unknown) {
-      const error = err as { response?: { data?: { message?: string } } };
-      toast.error(error.response?.data?.message || "Registration failed");
+    } catch {
+      toast.error("Registration failed");
     } finally {
       setLoading(false);
     }
