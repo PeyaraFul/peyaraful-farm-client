@@ -5,6 +5,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import api from "@/lib/api";
+import { authClient } from "@/lib/auth-client";
+
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -18,9 +20,14 @@ export default function RegisterPage() {
     setLoading(true);
 
     try {
-      await api.post("/api/auth/register", { name, email, password });
+     const { data, error } = await authClient.signUp.email({
+    name,
+    email,
+    password,
+});
+console.log('dataa', data);
       toast.success("Account created! Please login.");
-      router.push("/auth/login");
+      // router.push("/auth/login"); 
     } catch (err: unknown) {
       const error = err as { response?: { data?: { message?: string } } };
       toast.error(error.response?.data?.message || "Registration failed");
