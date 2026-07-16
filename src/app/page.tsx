@@ -77,7 +77,7 @@ export default function Home() {
     async function load() {
       try {
         const [featuredRes, cowRes, buffaloRes, allRes] = await Promise.all([
-          api.get("/api/animals", { params: { sort: "newest", limit: 4 } }),
+          api.get("/api/animals", { params: { sort: "newest", limit: 8 } }),
           api.get("/api/animals", { params: { type: "cow", limit: 1 } }),
           api.get("/api/animals", { params: { type: "buffalo", limit: 1 } }),
           api.get("/api/animals", { params: { limit: 50 } }),

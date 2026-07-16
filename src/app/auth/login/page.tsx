@@ -44,20 +44,21 @@ export default function LoginPage() {
 };
 
   const handleDemoLogin = async () => {
-    setEmail("admin@peyaraful.com");
-    setPassword("admin123");
     setLoading(true);
 
     const { error } = await authClient.signIn.email({
-      email: email,
-      password: password,
+      email: "arakash022@gmail.com",
+      password: "12345678",
       rememberMe: true,
     });
     if (error) {
       toast.error(error.message || "login failed");
+      setLoading(false);
+      return;
     }
 
-    setLoading(false);
+    toast.success("Login successful!");
+    router.push("/");
   };
 
   return (
@@ -126,7 +127,7 @@ export default function LoginPage() {
             disabled={loading}
             className="w-full py-3 bg-amber-500 hover:bg-amber-600 text-white font-semibold rounded-lg transition disabled:opacity-50"
           >
-            Demo Login (Admin)
+            Demo Login (user)
           </button>
 
           <p className="text-center mt-6 text-sm text-gray-600">

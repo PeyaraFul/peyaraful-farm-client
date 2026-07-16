@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import api from "@/lib/api";
+import { authClient } from "@/lib/auth-client";
 
 const breedsByType: Record<string, string[]> = {
   cow: [
@@ -19,6 +20,9 @@ const breedsByType: Record<string, string[]> = {
 export default function AddItemPage() {
   const router = useRouter();
   const [submitting, setSubmitting] = useState(false);
+  const { data: session } = authClient.useSession();
+  const user = session?.user;
+  const isAdmin = (user as Record<string, unknown>)?.role === "admin";
 
   const [name, setName] = useState("");
   const [type, setType] = useState<"cow" | "buffalo">("cow");
@@ -28,7 +32,17 @@ export default function AddItemPage() {
   const [price, setPrice] = useState("");
   const [color, setColor] = useState("");
   const [imageUrl, setImageUrl] = useState("");
+  const [shortDescription, setShortDescription] = useState("");
   const [description, setDescription] = useState("");
+
+  if (!user) return null;
+  if (!isAdmin) {
+    return (
+      <div className="text-center py-16">
+        <p className="text-gray-500 text-lg">Access denied. Admin only.</p>
+      </div>
+    );
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -55,6 +69,7 @@ export default function AddItemPage() {
         price: priceNum,
         color: color.trim(),
         imageUrl: imageUrl.trim(),
+        shortDescription: shortDescription.trim(),
         description: description.trim(),
       });
       toast.success("Animal added successfully!");
@@ -209,6 +224,20 @@ export default function AddItemPage() {
               />
             </div>
           )}
+        </div>
+
+        {/* Short Description */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Short Description
+          </label>
+          <input
+            type="text"
+            value={shortDescription}
+            onChange={(e) => setShortDescription(e.target.value)}
+            placeholder="Brief summary (shown on card)"
+            className="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-emerald-bright focus:border-transparent outline-none transition text-sm"
+          />
         </div>
 
         {/* Description */}

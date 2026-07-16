@@ -20,7 +20,7 @@ const guestLinks = [
 
 const userLinks = [
   { href: "/dashboard", label: "Dashboard" },
-  { href: "/dashboard/my-orders", label: "My Orders" },
+  { href: "/dashboard/my-orders", label: "Orders" },
 ];
 
 const adminLinks = [
@@ -55,7 +55,7 @@ const { data: session } = authClient.useSession();
     setLoggingOut(true);
 
     try {
-      const { error } = await authClient.signOut();
+      const {error} = await authClient.signOut();
 
       if (error) {
         toast.error(error.message || "Failed to sign out.");

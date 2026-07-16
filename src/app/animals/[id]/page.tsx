@@ -45,6 +45,7 @@ export default function AnimalDetailsPage() {
   const [reviewCount, setReviewCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [buying, setBuying] = useState(false);
+  const [isFavorited, setIsFavorited] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -70,6 +71,15 @@ export default function AnimalDetailsPage() {
           setAverageRating(revRes.data.averageRating);
           setReviewCount(revRes.data.total);
         }
+
+        if (user) {
+          try {
+            const favRes = await api.get("/api/favorites");
+            if (!cancelled) {
+              setIsFavorited(favRes.data.some((a: Animal) => a._id === id));
+            }
+          } catch { /* not logged in or error */ }
+        }
       } catch {
         if (!cancelled) setAnimal(null);
       } finally {
@@ -79,7 +89,7 @@ export default function AnimalDetailsPage() {
 
     load();
     return () => { cancelled = true; };
-  }, [id]);
+  }, [id, user]);
 
   const handleBuy = async () => {
     if (!user) {
@@ -88,7 +98,7 @@ export default function AnimalDetailsPage() {
     }
     setBuying(true);
     try {
-      await api.post("/api/orders", { animalId: id, buyerId: user.id });
+      await api.post("/api/orders", { animalId: id });
       toast.success("Order placed!");
       setAnimal((prev) => (prev ? { ...prev, status: "sold" } : prev));
     } catch (err: unknown) {
@@ -96,6 +106,20 @@ export default function AnimalDetailsPage() {
       toast.error(error.response?.data?.message || "Failed to place order");
     } finally {
       setBuying(false);
+    }
+  };
+
+  const handleToggleFavorite = async () => {
+    if (!user) {
+      toast.error("Please login to favorite");
+      return;
+    }
+    try {
+      const res = await api.post("/api/favorites/toggle", { animalId: id });
+      setIsFavorited(res.data.favorited);
+      toast.success(res.data.favorited ? "Added to favorites" : "Removed from favorites");
+    } catch {
+      toast.error("Failed to update favorite");
     }
   };
 
@@ -191,17 +215,53 @@ export default function AnimalDetailsPage() {
           <p className="text-gray-600 mt-4 leading-relaxed">{animal.description}</p>
 
           {animal.status === "available" && (
-            <button
-              onClick={handleBuy}
-              disabled={buying}
-              className="mt-6 w-full sm:w-auto px-8 py-3 bg-emerald-deep hover:bg-emerald-bright text-white font-semibold rounded-lg transition disabled:opacity-50 cursor-pointer"
-            >
-              {buying ? "Placing order..." : "Buy Now"}
-            </button>
+            <div className="flex items-center gap-3 mt-6">
+              <button
+                onClick={handleBuy}
+                disabled={buying}
+                className="px-8 py-3 bg-emerald-deep hover:bg-emerald-bright text-white font-semibold rounded-lg transition disabled:opacity-50 cursor-pointer"
+              >
+                {buying ? "Placing order..." : "Buy Now"}
+              </button>
+              <button
+                onClick={handleToggleFavorite}
+                className="px-4 py-3 border border-gray-300 hover:border-red-400 rounded-lg transition cursor-pointer flex items-center gap-2"
+                aria-label={isFavorited ? "Remove from favorites" : "Add to favorites"}
+              >
+                <svg
+                  className={`w-5 h-5 transition-colors ${isFavorited ? "text-red-500" : "text-gray-400"}`}
+                  fill={isFavorited ? "currentColor" : "none"}
+                  stroke="currentColor"
+                  strokeWidth={2}
+                  viewBox="0 0 24 24"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
+                </svg>
+                <span className="text-sm font-medium">{isFavorited ? "Favorited" : "Favorite"}</span>
+              </button>
+            </div>
           )}
 
           {animal.status === "sold" && (
-            <p className="mt-6 text-red-500 font-medium">This animal has been sold.</p>
+            <div className="flex items-center gap-3 mt-6">
+              <p className="text-red-500 font-medium">This animal has been sold.</p>
+              <button
+                onClick={handleToggleFavorite}
+                className="px-4 py-2 border border-gray-300 hover:border-red-400 rounded-lg transition cursor-pointer flex items-center gap-2"
+                aria-label={isFavorited ? "Remove from favorites" : "Add to favorites"}
+              >
+                <svg
+                  className={`w-5 h-5 transition-colors ${isFavorited ? "text-red-500" : "text-gray-400"}`}
+                  fill={isFavorited ? "currentColor" : "none"}
+                  stroke="currentColor"
+                  strokeWidth={2}
+                  viewBox="0 0 24 24"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
+                </svg>
+                <span className="text-sm font-medium">{isFavorited ? "Favorited" : "Favorite"}</span>
+              </button>
+            </div>
           )}
 
           <div className="mt-6 text-sm text-gray-500">

@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import toast from "react-hot-toast";
 import api from "@/lib/api";
+import { authClient } from "@/lib/auth-client";
 
 interface Animal {
   _id: string;
@@ -25,6 +26,9 @@ export default function ManageItemsPage() {
   const [loading, setLoading] = useState(true);
   const [deleting, setDeleting] = useState<string | null>(null);
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
+  const { data: session } = authClient.useSession();
+  const user = session?.user;
+  const isAdmin = (user as Record<string, unknown>)?.role === "admin";
 
   useEffect(() => {
     let cancelled = false;
@@ -43,6 +47,15 @@ export default function ManageItemsPage() {
     load();
     return () => { cancelled = true; };
   }, []);
+
+  if (!user) return null;
+  if (!isAdmin) {
+    return (
+      <div className="text-center py-16">
+        <p className="text-gray-500 text-lg">Access denied. Admin only.</p>
+      </div>
+    );
+  }
 
   const handleDelete = async (id: string) => {
     setDeleting(id);

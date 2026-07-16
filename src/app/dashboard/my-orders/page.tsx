@@ -40,13 +40,10 @@ export default function MyOrdersPage() {
   useEffect(() => {
     if (!user) return;
     let cancelled = false;
-    const buyerId = user.id;
 
     async function load() {
       try {
-        const res = await api.get("/api/orders", {
-          params: { buyerId },
-        });
+        const res = await api.get("/api/orders");
         if (!cancelled) {
           setOrders(res.data);
           const paidOrders = res.data.filter((o: Order) => o.status === "paid");
@@ -84,7 +81,6 @@ export default function MyOrdersPage() {
     setSubmitting(true);
     try {
       await api.post("/api/reviews", {
-        userId: user.id,
         animalId,
         orderId,
         rating: reviewRating,
