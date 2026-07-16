@@ -255,7 +255,7 @@ export default function Home() {
               <div className="relative h-72 rounded-2xl overflow-hidden shadow-md group-hover:shadow-xl transition">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
-                  src="https://images.unsplash.com/photo-1564760055775-d63b17a55c44?w=800&q=80"
+                  src="https://images.unsplash.com/photo-1662610014136-252d33d76b58?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8N3x8YnVmZmFsb3xlbnwwfHwwfHx8MA%3D%3D"
                   alt="Buffalo category"
                   className="w-full h-full object-cover group-hover:scale-105 transition duration-300"
                 />
