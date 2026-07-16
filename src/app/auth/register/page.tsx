@@ -36,8 +36,7 @@ export default function RegisterPage() {
       name: name,
       email: email,
       password: password,
-      role: 'user'
-    });
+    } as any);
 
     
     if (error) {
